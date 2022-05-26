@@ -52,7 +52,7 @@ From UI perspective ->
 - delete article deletes an article from the articles table
 
 In preparation for the next section, learn and practice SQL here: https://www.w3schools.com/sql/
-# Introduction to Section 4: Tables, migrations and naming conventions
+# Chpt 76 Introduction to Section 4: Tables, migrations and naming conventions
 Rails naming conventions - Articles resources
 - model
 - Table
@@ -73,4 +73,323 @@ We will start by building the table.
 2. title property will be string (255 character limit)
 3. description property will be text (as provides for more text than string)
 
-To generate a table we need a migration file. 
+To generate a table we need a migration file. In your project directory create a migration file called "create_articles"
+```
+rails generate migration create_articles
+```
+We use the generator to create migration files as Rails automatically appends a time stamp (see the string of numbers in the filename). This becomes important as we create or append migration files.
+
+Rails creates the table (as one doesn't exist), and we need to add the title attributes. For now we just put in the article title attribute (we'll do details later).
+```ruby
+  t.string :title
+```  
+I noted that my Rails already had:
+```ruby
+  t.timestamps
+```
+Whereas Mushrur's video did not show this. I presume this is because I'm using a later version of Rails.
+
+Now we will run this migration file. Note that Rails only runs migration files that have never run before.
+```
+rails db:migrate
+```
+You can see the newly minted table in the db folder, schema.rb
+
+Rails only runs the migrate command on files that have never been migrated. If there are no new migrate files then nothing will happen.
+
+If you want to update or append an existing table you have to rollback the previous migration, and run rails migrate again. Of course it is not the preferred way to create a database table.
+
+To rollback (or undo) the last migration, do:
+```
+rails db:rollback
+```
+You can then go to the last migration creation file and update it to what you wanted.
+```ruby
+class CreateArticles < ActiveRecord::Migration[7.0]
+  def change
+    create_table :articles do |t|
+      t.timestamps
+      t.string :title
+      t.text :description
+    end
+  end
+end
+```
+The schema file will now have the updated attributes.
+
+However, as mentioned, rollback is not the preferred method to deal with amending a table.
+
+E.g. When coding in a team, if you used rollback on your version and then uploaded the code changes, another team member couldn't run the same migration file as it would already have run. So the code bases will be different.
+
+### Database Amendment - Preferred method of amendment
+Create a new migration file to reflect any changes to the database. That way, in a team a team member will see there is a new migration file.
+
+E.g. A new migration file:
+```
+rails generate migration add_author_to_articles #note that Mashrur had add timestamps here instead of author, but the latest Rails automatically adds timestamps, so there is no need to do that.
+```
+The syntax for adding to an existing table is:
+```ruby
+  add_column :[name of table], :[title of attribute], :[datatype]
+```
+So my change showed:
+```ruby
+class AddAuthorToArticles < ActiveRecord::Migration[7.0]
+  def change
+    add_column :articles, :author, :string
+  end
+end
+```
+Now that we have our table, we'll need our model (or articles model) to work with this table.
+# Notes from Chpt 77
+## Details
+
+Model name: article
+
+Class name: Article -> Capitalized A and singular, CamelCase
+
+File name: article.rb -> singular and all lowercase, snake_case
+
+Table name: articles -> plural of model name and all lowercase
+
+Additional example:
+
+Model name: user
+
+Class name: User -> Capitalized U and singular, CamelCase
+
+File name: user.rb -> singular and all lowercase, snake_case
+
+Table name: users -> plural of model name
+
+Generate a migration to create a table (in this example articles):
+
+rails generate migration create_articles
+
+To add attributes for the table in the migration file, add the following inside create_table block:
+```
+t.string :title
+```
+To run the migration file, run the following command from the terminal:
+```
+rails db:migrate
+```
+The first time you run the migration file, it will create the database, the articles table and a schema.rb file.
+
+To rollback or undo the changes made by the last migration file that was run, you may use the following command:
+```
+rails db:rollback
+```
+If you have run the rollback step, then you can update the previous migration file and add the following line to add a description attribute (column) to the articles table:
+
+    t.text :description
+
+To run the newly edited migration file again, you can run
+```
+rails db:migrate
+```
+Note: This above line will only work if you had rolled back the prior migration.
+
+To generate a new migration file to add or make changes to your articles table you can generate a new file:
+```
+rails generate migration name_of_migration_file
+```
+Then within the def change method in the migration file you can add the following lines:
+
+    add_column :articles, :created_at, :datetime
+    add_column :articles, :updated_at, :datetime
+
+You can run the newly created migrations file by running rails db:migrate from the command line and check out the schema.rb file to check that the changes were reflected properly.
+# chpt 78 Models and rails console
+First we create article.rb in the App > Model folder. Every model we make will be based on the ApplicationRecord < ActiveRecord base. In the article.rb file we write:
+```ruby
+class Article < ApplicationRecord
+
+end
+```
+That is all that's needed in order to communicate with the database. This gives us Getters and Setters to interact with the articles in the database, through the Rails Console (IRB).
+
+We can access the console by typing ```rails console``` or ```rails c``` in our terminal.
+
+To see all our articles in the database we type the Class then all:
+```ruby
+Article.all
+```
+## Create
+To create table entries directly, we:
+```ruby
+Article.create(title: "first article", description: "description of first article", author: "Draco Satiric")
+```
+A preferred way of doing it in the console is through using variables.
+E.g.
+```ruby
+article = Article.new
+```
+Then it is easy to ascribe properties:
+```ruby
+article.title = "second article"
+article.description = "description of second article"
+article.author = "Blazmer Mahmoud"
+```
+However, up to this point the object is not saved in the database. It is only in the console. If you look you'll see that the id, created at, and updated at, fields are all "nil"
+```ruby
+irb(main):009:0> article
+=>
+#<Article:0x00007f0e3b6925f8                                                    
+ id: nil,                                                                       
+ created_at: nil,                                                               
+ updated_at: nil,                                                               
+ title: "second article",                                                       
+ description: "description of second article",                                  
+ author: "Blazmer Mahmoud">                                                     
+irb(main):010:0>
+```
+The way to "hit" the article database table is:
+```ruby
+article.save
+```
+A third way to enter an object into the database is to put the properties all on one line:
+```ruby
+article = Article.new(title: "third article", description: "description of third article", author: "Shysna Pzycq")
+```
+Now there will be 3 articles in the articles table.
+## Chpt 80 Read, Update, Delete
+To search for a specific object in the table if you know the id:
+```ruby
+Article.find(2) #where 2 is the object id
+```
+If you wish to change something about an object then it is better to create a variable linked to an article object.
+E.g.
+```ruby
+article = Article(2)
+```
+### Getters
+Now when I call article I will get the 2nd article. If I just wanted to see the title of the second article then I can use the variable as a Getter, i.e.
+```ruby
+article.title
+article.description
+article.author
+```
+### Setters
+How about using Setters? What if we wanted to update the description of the 2nd article?
+```ruby
+article.description = "edited - description of second article"
+```
+However, this has not hit the database table. As you can see if you type in:
+```ruby
+Article.find(2)
+=>
+#<Article:0x00007f0f296f1a28                                                    
+ id: 2,                                                            
+ created_at: Tue, 24 May 2022 06:42:46.650887000 UTC +00:00,       
+ updated_at: Tue, 24 May 2022 06:42:46.650887000 UTC +00:00,       
+ title: "second article",                                          
+ description: "description of second article",                     
+ author: "Blazmer Mahmoud">  
+ ```
+To reflect the change in the database table we must save it:
+```ruby
+article.save
+```
+### Delete
+How do we delete an object in the database table? Let's do it with the last article in the table.
+```ruby
+article = Article.last
+```
+We delete the article by using "destroy",
+```ruby
+article.destroy
+```
+Now, note that this hits the database immediately. There is no need to save.
+```ruby
+irb(main):014:0> article.destroy
+  TRANSACTION (0.2ms)  begin transaction
+  Article Destroy (1.3ms)  DELETE FROM "articles" WHERE "articles"."id" = ?  [["id", 3]]                                                           
+  TRANSACTION (103.1ms)  commit transaction                        
+=>                                                                 
+#<Article:0x00007f0f2972acb0                                       
+ id: 3,                                                            
+ created_at: Tue, 24 May 2022 07:14:31.993903000 UTC +00:00,       
+ updated_at: Tue, 24 May 2022 07:14:31.993903000 UTC +00:00,       
+ title: "third article",                                           
+ description: "description of third article",                      
+ author: "Shysna Pzycq">                                           
+```
+### Note
+If we look at the model (app>models>article.rb) there are no restrictions to what can be created. We could create one with no title and no description and it will still hit the table. We don't want this as it ruins the integrity of the table. We want to put in restraints to what can be added. That is, add validations.
+
+### Chpt Summary
+To find an article by id you can use the find method like below:
+```ruby
+Article.find(1) # replace 1 with id of article you want to find
+```
+You can save this to a variable and use it like below
+```ruby
+    article = Article.find(1)
+    article.title # to display (get) the title
+    article.description # to display (get) the description
+```
+You can use the methods below to view the first and last articles of the articles table:
+```ruby
+    Article.first # display the first article in the articles table
+    Article.last # display the last article in the articles table
+```
+You can update an article by finding it first and then using setters for the attributes that the model provides like below:
+```ruby
+    article = Article.find(id of article you want to edit)
+    article.title = "new title"
+    article.description = "new description"
+    article.save
+```
+You can delete an article by using the destroy method. A sample sequence could be like below:
+```ruby
+    article = Article.find(id of article you want to delete)
+    article.destroy
+```
+## Chpt 82 Validations
+First, we wish to ensure that an object in the table (an article) can only be added if it has a title. We update the article.rb file:
+```ruby
+class Article < ApplicationRecord
+  validates :title, presence: true
+end
+```
+This change won't take effect until we reload the Rails Console. This can be done by exiting and restarting, or by:
+```ruby
+reload!
+```
+Now if an object with no title has a save attempt, it will result in the flag "false", of which details can be seen with:
+```ruby
+article.errors
+```
+And to see the full details of an error:
+```ruby
+article.errors.full_messages
+```
+### Validation further
+Currently the validation would allow useless information such as just "a" or "b". This would corrupt our data within the table. We need to enforce minimum lengths for these properties.
+
+We do that by adjusting the validates :title line in the article.rb file:
+```ruby
+validates :title, presence: true, length: ( minimum: 6, maximum: 100 )
+```
+I noted that the validation is not retroactive, that is, the validations do not effect existing table entries.
+## Chpt 84 Show articles (route, action and view)
+![](rails_front_back_ends.png)
+
+For this lesson it is important to remember that the items covered here can be automatically generated in Rails. We are hand coding it to help our understanding.
+
+So, showing an individual article the request goes to the routes.rb file where it will get the 'show' route, and then to the controller to get the 'show' action. Then the show action interacts with the database with the help of the model, and then send the information back to the controller who'll send it to the 'show' view.
+
+So first step is to create the show route in the config>routes.rb file.
+Adding:
+```ruby
+resources :articles
+````
+will give all the routes we need to access the articles. In the terminal you can see all the routes expanded with:
+```
+rails routes --expanded
+```  
+For the lesson Mushrur just wants to focus on the 'show' action, and so changed the routes.rb file as:
+```ruby
+resources :articles, only: [:show]
+```
