@@ -380,6 +380,8 @@ For this lesson it is important to remember that the items covered here can be a
 
 So, showing an individual article the request goes to the routes.rb file where it will get the 'show' route, and then to the controller to get the 'show' action. Then the show action interacts with the database with the help of the model, and then send the information back to the controller who'll send it to the 'show' view.
 
+### Config routes.rb
+
 So first step is to create the show route in the config>routes.rb file.
 Adding:
 ```ruby
@@ -393,3 +395,92 @@ For the lesson Mushrur just wants to focus on the 'show' action, and so changed 
 ```ruby
 resources :articles, only: [:show]
 ```
+### Config controller
+Add new file "resources" for the new routing; new filename will be articles_controller.rb
+```ruby
+class ArticlesController < ApplicationController
+
+end
+```
+It is easy to hand code, and follows the same format as the PagesController. If you try to go to localhost:3000/articles/1 then you'll now get the error that the action 'show' is missing. So now we build that in the controller we just created:
+```ruby
+class ArticlesController < ApplicationController
+  def show
+
+  end
+end
+```
+First, there is no 'aricles' folder under views. So we need to add that folder first. Second, we add the show.html.erb page.
+
+Now, that show.html.erb page is currently just static. We want to pull the appropriate article and show the details on this page. We do that by fleshing out the 'show' action in the ArticlesController.
+
+The id of the article (which is the last part of the url) is passed in via the params hash: params (short for parameters), it's a hash data structure. The way we enter that is:
+```ruby
+params[:id]
+```
+However, if we def show as:
+```ruby
+def show
+  article = Article.find(params[:id])
+end
+```
+it won't work as the variable "article" is not carried to the pages view. To do that, we need to create an instanced variable.
+### Create instanced variable
+to create an instanced variable we just add '@' in front, i.e. @article.
+```ruby
+class ArticlesController < ApplicationController
+
+  def show
+    @article = Article.find(params[:id])
+  end
+
+end
+```
+Now that it is an instanced variable it is available in the 'show' view.
+### Display instanced variable
+To use Ruby code within the show html file we need to use embedded ruby tags.
+```html
+<p><strong>Title: <%= @article.title %> </strong></p>
+<p><strong>Description: <%= @article.description %></strong></p>
+```
+Note, that without the '=' within the embedded ruby tag, the code would just be evaluated, it would not show. You need the '=' to show it.
+
+We can run a debugger which is built in to Rails (gem = debug) by putting:
+```ruby
+class ArticlesController < ApplicationController
+
+  def show
+    debugger
+    @article = Article.find(params[:id])
+  end
+
+end
+```
+Then when refreshing a webpage you can go step by step in the rails server terminal.
+
+During the debugging you can type 'params' to see what parameters are being taken, and to can also be specific e.g. params[:id] will return the id of the article of the currently called page.
+
+To get out of the debugging console type 'continue'.
+## Chpt 85 Show articles feature - text references and code
+
+You can find all the code added for the show feature for our articles resource here: https://github.com/udemyrailscourse/alpha-blog-6/commit/7304bca894202f78535b4abdc870d42f6a254967
+
+Show actions are usually used to display individual items in a resource. For example:
+
+- a specific article from an articles table
+
+- a specific user's profile from a social media app
+
+- details of a specific stock from a stocks table
+
+- a specific recipe from a list of recipes
+
+The steps are to -
+
+1) Have a route for it
+
+2) Have the corresponding controller/action that the route directs the request to
+
+3) Have a corresponding view to display to the user who makes the request
+
+The code details for each step are in the link provided at the beginning of this text resource. As a reminder: the red highlighted area are removals and the green highlighted area are additions.
