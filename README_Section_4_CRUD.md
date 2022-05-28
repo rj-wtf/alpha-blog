@@ -484,3 +484,38 @@ The steps are to -
 3) Have a corresponding view to display to the user who makes the request
 
 The code details for each step are in the link provided at the beginning of this text resource. As a reminder: the red highlighted area are removals and the green highlighted area are additions.
+
+## Chpt 86 Articles Index
+Objective is to have the webpage home/articles, with a listing of all the articles available to view.
+
+Request comes for a list of articles, it goes via routing to our listing controller (an index action). From this action we'll use the Article model which will interact with the database and grab a listing of all the article titles with an instance variable, and make it available to our index action in the controller. Then use a view and iterate through each article and list their title in the view. 
+### build the route
+Looking at
+```
+rails routes --expanded
+```
+We see that url for index is /articles and the controller#action is articles#index.
+
+So in routes.rb we add :index to the resources line:
+```ruby
+  resources :articles, only: [:show, :index]
+```
+Then we need to add an index action to our articles_controller:
+
+```ruby
+  def index
+  end
+```
+And then because we have an index action, we need to add an index view under views>articles> index.html.erb
+
+Now we can see our Index page when we navigate to home/articles.
+
+Now we need to add some code to our ArticlesController#index action such that we can list all our articles on the home/articles page.
+
+We go back to our index action in the ArticlesController and:
+
+```ruby
+  def index 
+    @articles = Article.all
+  end
+```
