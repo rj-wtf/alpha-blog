@@ -11,6 +11,7 @@ U - Update
 
 D - Delete
 
+## One line Scaffold Generation in Rails
 Scaffold generator command to create an article model (with two attributes), articles controller, views for articles and migration file to create articles table:
 
 rails generate scaffold Article title:string description:text
@@ -53,6 +54,8 @@ From UI perspective ->
 
 In preparation for the next section, learn and practice SQL here: https://www.w3schools.com/sql/
 # Chpt 76 Introduction to Section 4: Tables, migrations and naming conventions
+## This Section of the Complete ROR Dev Course Looks at Manually Creating all the Functionality that the one line Scaffold Generator Creates
+
 Rails naming conventions - Articles resources
 - model
 - Table
@@ -519,3 +522,137 @@ We go back to our index action in the ArticlesController and:
     @articles = Article.all
   end
 ```
+Then we go back to our index.html.erb and:
+
+```html
+<h1>Articles Index</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+
+  <tbody>
+    <% @articles.each do |article| %>
+      <tr>
+        <td><%= article.title %></td>
+        <td><%= article.description %></td>
+        <td>Placeholder</td>
+      </tr>
+    <% end %>
+  </tbody>
+
+</table>
+```
+## Chpt 88 Forms - Building New Article Creation Form
+When we click on the create article form it will submitting a POST request, not a GET request.
+
+Rails also builds an authentication token to ensure that the form is being submitted from our app and not from a malicious source.
+
+"New" action will enable us to have the form, and "CREATE" action will work behind the scenes (so we won't need a view). So we need to have the "new" and "create" routes.
+
+In our routes.rb file we amend it thus:
+```ruby
+  resources :articles, only: [:show, :index, :new, :create]
+```
+when we
+```
+rails routes --expanded
+```
+We can see the actions required for new and create, being articles#new and articles#create. so we need to build them in our ArticlesController.
+
+Rails provides "form helpers" to ease the creation of forms https://guides.rubyonrails.org/form_helpers.html
+
+form_with is good but note that it uses Ajax. We will modify it so it uses an HTML post request.
+
+### Building the Form
+There are several different ways to do the form, in this case we will start with the scope, which for us is "article", and then we specify the url where the form will be sent 'articles_path'. Then to post the form using standard http post instead of ajax. 
+
+```html
+<h1>Create A New Article</h1>
+
+<%= form_with scope: :article, url: articles_path, local: true do |f| %>
+
+  <p>
+    <%= f.label :title %></br>
+    <%= f.text_field :title %>
+  </p>
+
+  <p>
+    <%= f.label :description %></br>
+    <%= f.text_area :description %> 
+  </p>
+
+  <p>
+    <%= f.submit %>
+
+  </p>
+
+<% end %>
+```
+Now the form is shown and you can interact with the submit button, but nothing is happening. We need to update the create action in the ArticlesController:
+
+```ruby
+  def create
+    render plain: params[:article]
+  end 
+```
+## Chpt 90 Create Action - Save newly created articles
+Here we will change the create action from rendering the article in the screen, to saving the article in the database table. 
+
+We need to pass in the params to the database and can't simply use the :article tag as it isn't whitelisted to use. We need to allow the top level key "article" and the keys underneath that of "title" and "description".
+
+```ruby
+  def create
+    @article = Article.new(params.require(:article).permit(:title, :description))
+  end 
+```
+### Adjustment from Text & Video
+I could not save the article to the database following the instructions above. I then realized it was because in my version I had added an "author" field, and this field was required for any entry to the table to be valid. So I updated the applicable sections in the ArticleController, the form fields (in new.html.erb) and in the index and show views to include the 'Author' field.
+
+### What happens after the creation?
+It would be logically to go to the newly created articles 'show' page. 
+
+We add the path within the controller:
+```ruby
+  def create
+    @article = Article.new(params.require(:article).permit(:title, :description, :author))
+    @article.save  
+    redirect_to article_path(@article)
+  end 
+```
+To get this redirect path, we look again at the rails routes --expanded, and the section for showing the new article. It shows that the path is "article", hence we put 'article_path', and we also need the :id, which is provided by putting (@article).
+
+However, because this type of redirect is so commonly used, we can simply condense it to:
+```ruby
+redirect_to @article
+```
+## Chpt 92 Messaging - Validation and Flash Messages
+We change the articles controller action under create to an if statement, such that if it doesn't save, then it renders a new form. We want the validation errors to show on this newly rendered form - and we put the code for that in the new.html.erb
+
+```html
+<h1>Create A New Article</h1>
+
+<% if @article.errors.any? %>
+  <h2>Article Could Not Be Saved</h2>
+  <ul>
+    <% @article.errors.full_messages.each do |msg| %>
+      <li><% msg %></li>
+  <% end %>
+  </ul>
+<% end %>
+
+<%= form_with scope: :article, url: articles_path, local: true do |f| %>
+```
+However, the very first time we load this page we'll get an error as we don't have a @article defined. So we need to amend the 'new' method in the controller:
+```ruby
+  def new
+    @article = Article.new
+  end 
+```
+
