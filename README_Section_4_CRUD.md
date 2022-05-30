@@ -655,4 +655,73 @@ However, the very first time we load this page we'll get an error as we don't ha
     @article = Article.new
   end 
 ```
+After I made the changes the error message didn't come up when I saved the form with all fields blank. After looking at the questions that had come up in the course, I found that this occurred for many people. It was solved with either:
+```ruby
+render :new, status: :unprocessable_entity
+```
+In the articles_controller.rb file, or with:
+```html
+<%= form_with scope: :article, url: articles_path, local: true do |f| %>
+```
+In the new.html.erb file.
+
+However, then the bullet points were coming up (the black dots) but no text. After searches and comparisons with the work of others I realized I had simply missed an "="! I had <% msg %> instead of <%= msg %>.
+### Using Flash to Show the Article has been Saved to the Database
+Rails has a helpful "Flash Message". We add this to the create action in the article_controller.rb file. There are two common types of flash messages - notice & alert. Alert being when something goes wrong.
+```ruby
+    if @article.save  
+      flash[:notice] = "Article was successfully created."
+      redirect_to @article
+```
+This creates a flash key, and we need to then decide where to show the key (i.e. have the message show on the screen).
+
+We put it in the application.html.erb file (under app>views>layouts), in the body tag, right above the yield. We use a key-value pair (can call it anything you like):
+```html
+  <body>
+    <% flash.each do |name, msg| %>
+      <%= msg %>
+    <% end %>
+    <%= yield %>
+  </body>
+``` 
+## Chpt 94 Edit and Update Existing Articles
+First, add the update and edit routes to routes.rb
+```ruby
+Rails.application.routes.draw do
+  root 'pages#home'
+  get 'about', to: 'pages#about'
+  resources :articles, only: [:show, :index, :new, :create, :edit, :update]
+end
+```
+Then we add an edit and an update method to our articles_controller.rb file.
+
+Then add an edit.html.erb file under views>articles. Use the information from the "new" html file as a base, and adjust the form field (as we will be using an instance of the article variable as the model).
+
+If we run the edit file we'll get a "NoMethodError in Articles#edit", as to properly display the edit form we need to instantiate the article being edited. Next step is to define this method in the controller. We can just copy the same code we used for the "show" action:
+```ruby
+  def edit
+    @article = Article.find(params[:id])
+  end
+```
+Now the article details appear in the edit form. The next step is to define the "update" action in the controller so that the updated article can be saved to the database table.
+
+```ruby
+ def update
+    @article = Article.find(params[:id])
+    if @article.update(params.require(:article).permit(:title, :description, :author))
+      flash[:notice] = "Article was successfully updated."
+      redirect_to @article 
+    else
+      render 'edit'
+    end 
+  end 
+```
+
+
+
+
+
+
+
+
 
