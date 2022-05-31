@@ -716,6 +716,44 @@ Now the article details appear in the edit form. The next step is to define the 
     end 
   end 
 ```
+## Chpt 96 Delete Article
+First we need to add destroy to our routes.rb file
+```ruby
+resources :articles, only: [:show, :index, :new, :create, :edit, :update]
+```
+However, adding destroy will result in all the default routes being in place, so we can delete the 'only' tag and be left with the default routes setting:
+```ruby
+resources :articles
+```
+by doing this we also expose all the restful routes for our articles resources. 
+
+REST - Representational state transfer - mapping HTTP verbs (get, post, put/patch, delete) to CRUD actions. 
+
+Resources provides REST-ful routes to Rails resources. Mapping all the front-end routes needed to handle requests coming in, and mapping them to applications. 
+
+As per Rails routes, the URI is /articles/:id, and the Controller#action is articles#destroy.
+
+The controller action is:
+```ruby
+  def destroy
+    @article = Article.find(params[:id])
+    @article.destroy 
+    redirect_to articles_path 
+  end 
+```
+However, we now need to consider how we get to the destroy option. We need to add a link in the "Action" column of our articles index. 
+### Embedded Ruby html linking
+The code template to use is: <%= link_to '[text to show]', '[path]' %>
+
+So the code for the link in our index file for the specific article is:
+```html
+<td><%= link_to 'Delete', article_path(article) %></td>
+```
+Then, since this is the same path for "show", we need to indicate the method we want is delete, by:
+```html 
+<td><%= link_to 'Delete', article_path(article), method: :delete %></td>
+```
+By the way, the default method is 'show', so if you want that action you do not need to specify the method.
 
 
 
