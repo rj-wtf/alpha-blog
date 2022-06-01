@@ -780,6 +780,31 @@ We add a confirmation by using some javascript: data: { confirm: "Are you sure?"
 ```html
 <%= link_to 'Delete', article_path(@article), method: :delete, data: { confirm: "Are you sure?" } %> 
 ```
+So, the link to delete didn't work for either the articles page or the show page. When clicking delete it would just show the article. Looking on the ROR website questions, this issue has come up for several people. I implemented this and it worked from the articles page to delete, but not the show page:
+```html
+<td><%= link_to 'Delete', article_path(article), method: :delete, data: { "turbo-method": :delete, "turbo-confirm": "Are you sure?" } %></td>
+```
+When I try this on the 'show' page with:
+```html
+<%= link_to 'Delete', article_path(@article), method: :delete, data: { "turbo-method": :delete, "turbo-confirm": "Are you sure?" } %> 
+```
+(note that this page uses @article instead of article), and when I try to delete the article I get the confirmation message (do I really want to delete it) and on clicking Yes I get the error: 
+![error](error1.png)
+
+For some reason the pathway is following the "show" action instead of the "delete" action when running from the 'show' page.
+
+I ensured Yarn was updated (as someone said this helped them), but no luck.
+
+Then I found another person who had the same issue and asked the question about how to solve it. They did by adding "status: :see other' to the delete method in the controller as follows:
+```ruby
+  def destroy
+    @article = Article.find(params[:id])
+    @article.destroy 
+    redirect_to articles_path, status: :see_other
+  end 
+```
+
+
 
 
 
