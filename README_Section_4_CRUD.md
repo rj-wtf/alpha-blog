@@ -755,6 +755,32 @@ Then, since this is the same path for "show", we need to indicate the method we 
 ```
 By the way, the default method is 'show', so if you want that action you do not need to specify the method.
 
+### Edit Article Link
+Looking at the rails routes --expanded entry for editing an article, the prefix is 'edit_article'. Therefore the correct entry for the edit link in the index.html.erb file is:
+```ruby
+        <td><%= link_to 'Edit', edit_article_path(article) %></td>
+```
+## Chpt 98 User Interface - Layout Links
+Changed the table column 'Action' to span the 3 columns with Show, Edit and Delete.
+```html
+<th colspan="3">Actions</th>
+```
+### Link on Articles Listing Page to Create a new Article
+```html
+<%= link_to 'Create New Article', new_article_path %>
+```
+Links on Individual Article Page:
+```html
+<%= link_to 'Edit', edit_article_path(@article) %> |
+<%= link_to 'Delete', article_path(@article), method: :delete %> |
+<%= link_to 'Return to Articles Listing', articles_path %>
+```
+### Add "confirmation action" when deleting
+We add a confirmation by using some javascript: data: { confirm: "Are you sure?" }
+```html
+<%= link_to 'Delete', article_path(@article), method: :delete, data: { confirm: "Are you sure?" } %> 
+```
+
 
 
 
