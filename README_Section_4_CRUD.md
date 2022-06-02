@@ -803,6 +803,69 @@ Then I found another person who had the same issue and asked the question about 
     redirect_to articles_path, status: :see_other
   end 
 ```
+### Heroku Database
+After the last change I loaded changes to Heroku via Git, then tried to run the app from the heroku web address but it didn't work. There was no detail in the error message other than something went wrong and to check the logs. By accident I found a comment to ensure that the database was migrated, so I tried it:
+```
+heroku run rails db:migrate
+```
+And after this it worked! Although the database table started empty on Heroku, i.e. without any populated rows. But I can add rows fine, Edit etc.
+## Chpt 100 DRY (Don't Repeat Yourself) - code refactoring & partials
+The line:
+```ruby
+@article = Article.find(params[:id])
+```
+Exists in multiple places in articles_controller.rb. So we'll extract it by using it as a method.
+
+We start with 'private' to indicate it is only used in this file. Then we make this method:
+```ruby
+private
+
+  def set_article
+    @article = Article.find(params[:id])
+  end
+```
+Note that private doesn't require an "end".
+
+Then at the top of the file we add "before_action :set_article". What it does is perform that action before any of the methods. However, we don't want it done for all the methods. We just want it for the show, edit, update and destroy actions.
+```ruby
+class ArticlesController < ApplicationController
+  before_action :set_article, only: [:show, :edit, :update, :destroy]
+```
+Another code repeat in that file in both create and update is:
+```ruby
+params.require(:article).permit(:title, :description, :author)
+```
+Note about PRIVATE
+It is important to remember:
+-private isn't a method, so don't put an "end" for it
+-don't put any other methods under it, as they won't be usable by any other files in your app! i.e. they are only available for that specific controller.
+### Views
+The 'form' code for both new and edit html files are just about identical. We can clean this up by developing a "partial".
+
+To start, let's practice with the 'flash message' code in application.html.erb. Let's cut the code:
+```html
+    <% flash.each do |name, msg| %>
+      <%= msg %>
+    <% end %>
+```
+and paste it into a partial. Create a new file in the same folder, and start it with an underscore. Rails will then know this is a partial. Then we go back to the application.html.erb file and where we copied the code we put this code in its place:
+```html
+<%= render 'layouts/messages'%>
+```
+#### Let's create the partial for "new" & "edit"
+Cut the entire form from edit and paste it into a new file in the same folder, calling it _form.html.erb
+
+Then in place of the form in the edit file, put:
+```html
+<%= render 'form' %>
+```
+Do the same for the create form file.
+
+
+
+
+
+
 
 
 
