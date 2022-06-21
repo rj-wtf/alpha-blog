@@ -51,6 +51,10 @@
     - [Nav Bar Test](#nav-bar-test)
     - [GoRails](#gorails)
     - [Installing Yarn via npm](#installing-yarn-via-npm)
+    - [Sync with GIT](#sync-with-git)
+    - [Install Bootstrap](#install-bootstrap)
+      - [Updating npx](#updating-npx)
+    - [Back to installing Bootstrap](#back-to-installing-bootstrap)
 
 # CRUD and scaffold generators - Text directions, references and code
 Query language to communicate with database: SQL (Structured Query Language)
@@ -1037,11 +1041,200 @@ Check with
 ```
 yarn --version
 ```
+### Sync with GIT
+I then did sync with Git, following the directions here http://www.deanbodenham.com/learn/using-git-to-sync-different-computers.html.
 
+So I reverted back to the alpha-blog version before I started upgrading to Bootstrap. I did this as I found out above how I could do it using the CDN copied into the application file, and now want to try installing the Bootstrap gem (CSS and Javascript).
+### Install Bootstrap
+Then I started to do the update, using the instructions on [Github](https://github.com/rails/cssbundling-rails). At the time of writing this (June 10 2022), the instructions are:
 
+  You must already have node and yarn installed on your system. You will also need npx version 7.1.0 or later. Then:
 
+  Run ./bin/bundle add cssbundling-rails
+  Run ./bin/rails css:install:[tailwind|bootstrap|bulma|postcss|sass]
+  Or, in Rails 7+, you can preconfigure your new application to use a specific bundler with rails new myapp --css [tailwind|bootstrap|bulma|postcss|sass].
 
+#### Updating npx
+I checked my version of npx:
+```
+npx --version
+6.14.4
+```
+So I needed to update npx first to "npx version 7.1.0 or later". This [website](https://kenanbek.medium.com/how-to-upgrade-nvm-npm-node-and-npx-97f927dddd22) had instructions on how to update npx, being first you must update npm:
+```
+sudo npm install -g npm@latest
+```
+But this threw up errors:
+```
+npm WARN notsup Unsupported engine for npm@8.12.1: wanted: {"node":"^12.13.0 || ^14.15.0 || >=16"} (current: {"node":"10.19.0","npm":"6.14.4"})
+npm WARN notsup Not compatible with your version of node/npm: npm@8.12.1
+```
+However, in that website's instructions to update node, npm had to first be at the latest version! Circular reference much!
 
+How to fix this? In the website, the first step was to update nvm, so maybe I could try that.
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+```
+And I got another error:
+```
+ERROR: npm is known not to run on Node.js v10.19.0
+You'll need to upgrade to a newer Node.js version in order to use this
+version of npm. You can find the latest version at https://nodejs.org/
+```
+So, off to https://nodejs.org I went, and found that the latest version is 18.3.0. Downloaded the tar.xz file and then looked up how to install it on Linux Mint. The instructions I [found](https://www.codegrepper.com/code-examples/shell/how+to+install+node.tar.xz+in+ubuntu) were:
+```
+tar xf [filename]
+
+This will expand the contents of the file to a folder. Then the commands are, from the folder:
+
+./configure
+
+make
+
+sudo make install
+```
+But of course when I try the second step I get:
+```
+./configure
+bash: ./configure: No such file or directory
+```
+So frustrating. I do some more searching on how to install from a xz file. I find the following instructions [here](https://www.codegrepper.com/code-examples/shell/how+to+install+node.tar.xz+in+ubuntu)
+```
+sudo cp -r node-v18.3.0-linux-x64/{bin,include,lib,share} /usr/
+```
+I got no errors coming up, and I get success on checking the version:
+```
+node --version
+v18.3.0
+```
+So now that node is the latest version, I try to install the latest npm version again:
+```
+sudo npm install -g npm@latest
+```
+And this time no errors. It also must have updated my npx, as now when I look at the version it is above 7.1.0!.
+```
+npx --version
+8.11.0
+```
+### Back to installing Bootstrap
+```
+./bin/bundle add cssbundling-rails
+```
+I did this from my project folder, and got several pages of text returned in the console. I have no idea if it was successful or not. Hoping that it was, I proceed with the final step:
+```
+./bin/rails css:install:bootstrap
+```
+And of course I got an error:
+```
+./bin/rails css:install:bootstrap
+rails aborted!
+Don't know how to build task 'css:install:' (See the list of available tasks with `rails --tasks`)
+```
+So, going back to the pages of text, I noted right at the top it said:
+```
+#<NameError: uninitialized constant Gem::Source
+```
+Googling that error, I [found](https://stackoverflow.com/questions/15060011/nameerror-uninitialized-constant-gemsourceindex) the advice to:
+```
+gem update bundle && gem update --system
+```
+This returned the message that it was updated successfully, so I returned to run:
+```
+./bin/bundle add cssbundling-rails
+```
+This time I had success!
+```
+Fetching cssbundling-rails 1.1.0
+Installing cssbundling-rails 1.1.0
+```
+So then the next step:
+```
+./bin/rails css:install:bootstrap
+```
+Lots of text, some of it red, and warnings:
+```
+./bin/rails css:install:bootstrap
+Build into app/assets/builds
+      create  app/assets/builds
+      create  app/assets/builds/.keep
+      append  app/assets/config/manifest.js
+Stop linking stylesheets automatically
+        gsub  app/assets/config/manifest.js
+      append  .gitignore
+      append  .gitignore
+Remove app/assets/stylesheets/application.css so build output can take over
+      remove  app/assets/stylesheets/application.css
+Add stylesheet link tag in application layout
+File unchanged! The supplied flag value not found!  app/views/layouts/application.html.erb
+Add default Procfile.dev
+      create  Procfile.dev
+Ensure foreman is installed
+         run  gem install foreman from "."
+Fetching foreman-0.87.2.gem
+Successfully installed foreman-0.87.2
+1 gem installed
+Add bin/dev to start foreman
+      create  bin/dev
+Install Bootstrap with Bootstrap Icons and Popperjs/core
+      create  app/assets/stylesheets/application.bootstrap.scss
+         run  yarn add sass bootstrap bootstrap-icons @popperjs/core from "."
+yarn add v1.22.19
+warning package.json: No license field
+warning alpha-blog: No license field
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+success Saved lockfile.
+warning alpha-blog: No license field
+success Saved 20 new dependencies.
+info Direct dependencies
+├─ @popperjs/core@2.11.5
+├─ bootstrap-icons@1.8.3
+├─ bootstrap@5.1.3
+└─ sass@1.52.3
+info All dependencies
+├─ @popperjs/core@2.11.5
+├─ anymatch@3.1.2
+├─ binary-extensions@2.2.0
+├─ bootstrap-icons@1.8.3
+├─ bootstrap@5.1.3
+├─ braces@3.0.2
+├─ chokidar@3.5.3
+├─ fill-range@7.0.1
+├─ glob-parent@5.1.2
+├─ immutable@4.1.0
+├─ is-binary-path@2.1.0
+├─ is-extglob@2.1.1
+├─ is-glob@4.0.3
+├─ is-number@7.0.0
+├─ normalize-path@3.0.0
+├─ picomatch@2.3.1
+├─ readdirp@3.6.0
+├─ sass@1.52.3
+├─ source-map-js@1.0.2
+└─ to-regex-range@5.0.1
+Done in 4.97s.
+      insert  config/initializers/assets.rb
+Appending Bootstrap JavaScript import to default entry point
+      append  app/javascript/application.js
+Add build:css script
+         run  npm set-script build:css "sass ./app/assets/stylesheets/application.bootstrap.scss ./app/assets/builds/application.css --no-source-map --load-path=node_modules" from "."
+npm WARN set-script set-script is deprecated, use `npm pkg set scripts.scriptname="cmd" instead.
+         run  yarn build:css from "."
+yarn run v1.22.19
+warning package.json: No license field
+$ sass ./app/assets/stylesheets/application.bootstrap.scss ./app/assets/builds/application.css --no-source-map --load-path=node_modules
+Done in 2.46s.
+```
+So the red text was "File unchanged! The supplied flag value not found!  app/views/layouts/application.html.erb". The application file exists so I'm not sure what the "supplied flag" is meant to mean.
+
+Not sure if the warnings broke it either?
+```
+warning package.json: No license field
+warning alpha-blog: No license field
+npm WARN set-script set-script is deprecated, use `npm pkg set scripts.scriptname="cmd" instead.
+```
 
 
 
